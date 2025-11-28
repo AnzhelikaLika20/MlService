@@ -1,0 +1,11 @@
+pycache/
+*.pyc
+.env
+.env.local
+.dvc/cache/
+.dvc/tmp/
+.vscode/
+.idea/
+dist/
+build/
+*.egg-info/
