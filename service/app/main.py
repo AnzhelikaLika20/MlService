@@ -1,11 +1,11 @@
 from fastapi import FastAPI
-from app.config import settings
 from app.logger import get_logger
+from app.api import health, models, datasets
 
-logger = get_logger(__name__)
-app = FastAPI(title="ML Manager", version="0.1.0")
+logger = get_logger("main")
 
-@app.get("/health", tags=["system"])
-def health():
-    logger.info("Health check")
-    return {"status": "ok", "env": settings.ENV}
+app = FastAPI(title="ML Manager", version="0.1")
+
+app.include_router(health.router)
+app.include_router(models.router, prefix="/models", tags=["models"])
+app.include_router(datasets.router, prefix="/datasets", tags=["datasets"])
