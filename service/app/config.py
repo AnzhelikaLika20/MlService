@@ -8,7 +8,12 @@ class Settings(BaseSettings):
     MINIO_ENDPOINT: str = "minio:9000"
     MINIO_ACCESS_KEY: str = ""
     MINIO_SECRET_KEY: str = ""
-    S3_BUCKET: str = "ml-bucket"
+
+    S3_ENDPOINT: str
+    S3_ACCESS_KEY: str
+    S3_SECRET_KEY: str
+    S3_BUCKET: str
+    S3_REGION: str
 
     class Config:
         env_file = ".env"

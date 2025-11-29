@@ -27,23 +27,37 @@ make rebuild
 
 Протестировать работоспособность можно по запросом по `curl http://0.0.0.0:8000/health`
 
+Swagger доступен по `http://130.193.59.50:8000/docs`
+
 ## Работа с моделями
 
-1. Обучение
+1. Обучение c сохранением в minio
 
 ``` bash
-curl -X POST http://localhost:8000/models/linear/train \
- -H "Content-Type: application/json" \
- -d '{"X":[[1],[2],[3]], "y":[2,4,6]}'
+curl -X POST http://localhost:8000/models/linear/train -H "Content-Type: application/json" -d '{"X": [[1], [2]], "y": [2, 4]}'
 ```
-Результат `{"status":"trained","path":"saved_models/linear.pkl"}`
+Результат `{"status":"trained","stored_as":"linear.pkl"}`
 
-2. Предсказания
+2. Предсказания моделью из minio
 
 ```bash
-curl -X POST http://localhost:8000/models/linear/predict \
- -H "Content-Type: application/json" \
- -d '{"X":[[4],[5]]}'
+curl -X POST http://localhost:8000/models/linear/predict 
+-H "Content-Type: application/json" 
+-d '{"X": [[3], [4]]}'
 ```
 
 Результат `{"predictions":[7.999999999999999,10.0]}`
+
+## Работа с датасетами
+1. Создать датасет
+``` bash
+curl -X POST http://localhost:8000/datasets \
+-H "Content-Type: application/json" \
+-d '{
+    "dataset_name": "my_dataset.json",
+    "data": [
+        {"X": [1,2], "y": 3},
+        {"X": [4,5], "y": 9}
+    ]
+}'
+```

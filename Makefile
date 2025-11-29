@@ -7,4 +7,7 @@ up:
 clean:
 	docker compose -f infra/docker-compose.yml down --rmi all -v --remove-orphans
 
-rebuild: clean build up
+create-bucket:
+	docker exec -it ml_service bash -c "PYTHONPATH=/app python -m app.scripts.create_bucket"
+
+rebuild: clean build up create-bucket
