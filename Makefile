@@ -1,28 +1,10 @@
-.PHONY: help build up down logs lint test clean
-
-IMAGE_SERVICE=ml-service:local
-
-help:
-	@echo "Targets: build up down logs lint test clean"
-
 build:
-	docker build -t $(IMAGE_SERVICE) ./service
+	docker compose -f infra/docker-compose.yml build --no-cache
 
 up:
-	docker-compose -f infra/docker-compose.yml up --build -d
-
-down:
-	docker-compose -f infra/docker-compose.yml down
-
-logs:
-	docker-compose -f infra/docker-compose.yml logs -f
-
-lint:
-	black --check .
-	ruff check .
-
-test:
-	pytest -q
+	docker compose -f infra/docker-compose.yml up -d
 
 clean:
-	docker-compose -f infra/docker-compose.yml down --rmi local --volumes --remove-orphans
+	docker compose -f infra/docker-compose.yml down --rmi all -v --remove-orphans
+
+rebuild: clean build up
