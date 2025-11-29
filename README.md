@@ -26,3 +26,24 @@ make rebuild
 ```
 
 Протестировать работоспособность можно по запросом по `curl http://0.0.0.0:8000/health`
+
+## Работа с моделями
+
+1. Обучение
+
+``` bash
+curl -X POST http://localhost:8000/models/linear/train \
+ -H "Content-Type: application/json" \
+ -d '{"X":[[1],[2],[3]], "y":[2,4,6]}'
+```
+Результат `{"status":"trained","path":"saved_models/linear.pkl"}`
+
+2. Предсказания
+
+```bash
+curl -X POST http://localhost:8000/models/linear/predict \
+ -H "Content-Type: application/json" \
+ -d '{"X":[[4],[5]]}'
+```
+
+Результат `{"predictions":[7.999999999999999,10.0]}`
