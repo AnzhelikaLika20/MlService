@@ -67,9 +67,6 @@ services:
     ports:
       - "9200:9200"
 
-
-
-
   minio:
     image: minio/minio:latest
     container_name: minio

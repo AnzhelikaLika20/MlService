@@ -61,3 +61,10 @@ curl -X POST http://localhost:8000/datasets \
     ]
 }'
 ```
+
+
+   make minikube-start
+   make push
+   make k8s-deploy
+   make open-dashboard
+   make clean all
