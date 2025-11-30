@@ -1,8 +1,11 @@
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, UploadFile, HTTPException
+from fastapi.responses import FileResponse
 from app.services.dataset_manager import DatasetManager
 from app.logger import get_logger
 import os
-from app.storage import dvc_add, dvc_remove, dvc_list
+from app.storage import dvc_add, dvc_remove, dvc_list, dvc_restore_file
+import subprocess
+
 
 router = APIRouter()
 logger = get_logger("datasets")
@@ -34,3 +37,12 @@ def delete_dataset(name: str):
     path = f"/app/data/{name}"
     dvc_remove(path)
     return {"status": "deleted"}
+
+
+@router.get("/{filename}")
+def get_dataset_from_dvc(filename: str):
+    try:
+        file_path = dvc_restore_file(filename)
+    except subprocess.CalledProcessError as e:
+        raise HTTPException(status_code=404, detail=f"DVC error: {e.stderr}")
+    return FileResponse(file_path)

@@ -5,8 +5,21 @@ from app.s3 import get_s3_client
 from app.config import settings
 import subprocess
 from pathlib import Path
-import subprocess
+import os
+import json
+from clearml import Task, StorageManager
+from app.ml.registry import get_model
+import joblib
+import os
+from clearml import OutputModel, Model
 
+MODEL_LOCAL_PATH = "./models"
+os.makedirs(MODEL_LOCAL_PATH, exist_ok=True)
+
+CACHE_DIR = "saved_models/cache"
+TASK_ID_FILE = os.path.join(CACHE_DIR, "task_id.json")
+os.makedirs(CACHE_DIR, exist_ok=True)
+DVC_DATASETS_DIR = "data"
 # DVC
 
 BASE = Path("/app")
@@ -19,7 +32,7 @@ def dvc_add(file_path: str):
 
 
 def dvc_remove(file_path: str):
-    subprocess.check_call(["dvc", "remove", file_path], cwd=BASE)
+    subprocess.check_call(["dvc", "remove", "--outs", file_path + ".dvc"], cwd=BASE)
     subprocess.check_call(["dvc", "push"], cwd=BASE)
 
 
@@ -41,49 +54,63 @@ def dvc_list(path=".", recursive=False):
     return files
 
 
+def dvc_restore_file(filename: str) -> str:
+    """
+    Скачивает (dvc pull) файл filename из DVC, если надо.
+    Возвращает абсолютный путь к файлу **если он существует после dvc pull**,
+    иначе кидает исключение.
+    """
+    safe_fn = os.path.basename(filename)
+    abs_path = os.path.join(DVC_DATASETS_DIR, safe_fn)
+    if not os.path.exists(abs_path):
+        subprocess.run(
+            ["dvc", "pull", abs_path],
+            check=True,
+            capture_output=True,
+            text=True
+        )
+    return abs_path
+
+
+
 # МОДЕЛИ
 
-def load_model(model_name: str):
-    s3 = get_s3_client()
+def save_model_clearml(model, model_name, clearml_task):
+    path = os.path.join(MODEL_LOCAL_PATH, f"{model_name}.pkl")
+    joblib.dump(model, path)
+    output_model = OutputModel(task=clearml_task, name=model_name)
+    output_model.update_weights(path)
+    output_model.publish()
+    return output_model
 
-    response = s3.get_object(
-        Bucket=settings.S3_BUCKET,
-        Key=f"{model_name}.pkl"
+
+def load_model_from_clearml(model_name: str):
+    local_path = os.path.join(MODEL_LOCAL_PATH, f"{model_name}.pkl")
+
+    model_list = Model.query_models(
+        model_name=model_name,
+        only_published=True,
     )
+    if not model_list:
+        raise FileNotFoundError(f"No model artifact found for {model_name} in ClearML")
+    model_entry = sorted(model_list, key=lambda m: getattr(m, 'last_update', ''), reverse=True)[0]
+    fp = model_entry.get_local_copy()
+    os.replace(fp, local_path)
 
-    return pickle.loads(response["Body"].read())
+    return joblib.load(local_path)
 
 
-def save_model(model, model_name: str):
-    """Сохраняет обученную модель в S3"""
-    import pickle
-    from io import BytesIO
-
-    buffer = BytesIO()
-    pickle.dump(model, buffer)
-    buffer.seek(0)
-
-    s3 = get_s3_client()
-    s3.put_object(
-        Bucket=settings.S3_BUCKET,
-        Key=f"models/{model_name}.pkl",
-        Body=buffer
-    )
 
 def delete_model(model_name: str):
     """Удаляет модель из S3"""
     key = f"models/{model_name}.pkl"
 
-    s3 = get_s3_client()
-    try:
-        s3.delete_object(Bucket=settings.S3_BUCKET, Key=key)
-    except s3.exceptions.NoSuchKey:
-        raise FileNotFoundError(f"Model {model_name} not found")
+    model_list = Model.query_models(
+        model_name=model_name,
+        only_published=True,
+    )
+    if not model_list:
+        raise FileNotFoundError(f"No model artifact found for {model_name} in ClearML")
+    model_entry = sorted(model_list, key=lambda m: getattr(m, 'last_update', ''), reverse=True)[0]
 
-
-def trained_models():
-    """Возвращает список всех моделей в S3"""
-    s3 = get_s3_client()
-    response = s3.list_objects_v2(Bucket=settings.S3_BUCKET, Prefix="models/")
-    items = response.get("Contents", [])
-    return [item["Key"].split("/")[-1].replace(".pkl", "") for item in items]
+    Model.remove(model_entry)

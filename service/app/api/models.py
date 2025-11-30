@@ -3,7 +3,9 @@ import numpy as np
 from fastapi import APIRouter, HTTPException
 from app.ml.registry import list_models, get_model
 from app.logger import get_logger
-from app.storage import save_model, load_model, trained_models, delete_model
+from app.storage import load_model_from_clearml, delete_model, save_model_clearml
+from clearml import Task, StorageManager, Model
+
 
 router = APIRouter()
 logger = get_logger("models")
@@ -19,34 +21,66 @@ def get_model_classes():
 
 @router.get("/trained-models")
 def get_all_models():
-    """Возвращает список всех обученных моделей"""
-    return {"models": trained_models()}
+    """
+    Возвращает список всех обученных моделей в ClearML,
+    включая имя, id, проект и дату обновления.
+    """
+    models = Model.query_models(
+        only_published=True
+    )
+    result = []
+    for m in sorted(models, key=lambda m: getattr(m, 'last_update', ''), reverse=True):
+        result.append({
+            "id": m.id,
+            "name": m.name,
+            "project": m.project,
+            "framework": getattr(m, 'framework', None),
+            "last_update": getattr(m, 'last_update', None),
+            "tags": getattr(m, 'tags', []),
+            "uri": getattr(m, 'uri', None)
+        })
+    return {"models": result}
+
 
 
 @router.post("/{model_name}/train")
 def train_model(model_name: str, payload: dict):
     if "X" not in payload or "y" not in payload:
         raise HTTPException(status_code=400, detail="Need X and y")
+    X, y = payload["X"], payload["y"]
+    params = payload.get("params", {})
+
+    task = Task.init(
+        project_name="ML_Service",
+        task_name=f"train_{model_name}",
+        task_type=Task.TaskTypes.training
+    )
 
     model = get_model(model_name)
+    model.train(X, y, **params)
+    output_model = save_model_clearml(model, model_name, task)
+    task.upload_artifact(name=f"{model_name}_model_file", artifact_object=model)
+    task.close()
 
-    model.train(payload["X"], payload["y"], **payload.get("params", {}))
-
-    save_model(model, model_name)
-
-    return {"status": "trained", "stored_as": f"{model_name}.pkl"}
+    return {
+        "status": "trained",
+        "model_id": output_model.id,
+        "name": output_model.name
+    }
 
 
 @router.post("/{model_name}/predict")
 def predict(model_name: str, payload: dict):
+    if "X" not in payload:
+        raise HTTPException(status_code=400, detail="Missing 'X' in request body")
     try:
-        model = load_model(model_name)
-    except Exception:
-        raise HTTPException(status_code=404, detail="Model not found in storage")
+        model = load_model_from_clearml(model_name)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Model not found: {e}")
 
     preds = model.predict(payload["X"])
-
     return {"predictions": preds}
+
 
 
 @router.delete("/models/{model_name}")

@@ -1,6 +1,5 @@
 pycache
 *.pyc
-.env
 .git
 .vscode
 .dvc
