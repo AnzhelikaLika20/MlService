@@ -7,64 +7,36 @@
 ```bash
 cd ~/MlService
 ```
-3. Полностью удалить старые контейнеры и образы
+3. Запустить локально
 ```bash
-make clean
-```
-4. Пересобрать образы
-```bash
-make build
-```
-5. Поднять сервисы в фоне
-```bash
-make up
-```
-**Или одной командой**
-
-```bash
-make rebuild
+make -f Makefile.local rebuild
 ```
 
 Протестировать работоспособность можно по запросом по `curl http://0.0.0.0:8000/health`
 
-Swagger доступен по `http://130.193.59.50:8000/docs`
+Swagger доступен по `http://0.0.0.0:8000/docs`
 
-## Работа с моделями
+Интерактивный дашборд доступен по `http://0.0.0.0:8501/`
 
-1. Обучение c сохранением в minio
+Сервис работает с DVC и ClearMl. 
 
-``` bash
-curl -X POST http://localhost:8000/models/linear/train -H "Content-Type: application/json" -d '{"X": [[1], [2]], "y": [2, 4]}'
-```
-Результат `{"status":"trained","stored_as":"linear.pkl"}`
+Для работы с ClearMl нужно:
+1. После запуска сервиса залогиниться по `http://0.0.0.0:8080/login`
+2. Перейти `Settings` -> `Workspace` -> Кликнуть `Create new credentials` -> Положить `Access key` и `Secret key` в .env в CLEARML_API_ACCESS_KEY и CLEARML_API_SECRET_KEY соответственно
 
-2. Предсказания моделью из minio
+Реализованное API
+![handlers](./readme_photos/handlers.png)
 
-```bash
-curl -X POST http://localhost:8000/models/linear/predict 
--H "Content-Type: application/json" 
--d '{"X": [[3], [4]]}'
-```
+Пример запроса на обучение модели
+![handlers](./readme_photos/train_example.png)
 
-Результат `{"predictions":[7.999999999999999,10.0]}`
+Интерактивный дашборд
+![handlers](./readme_photos/dashboard.png)
 
-## Работа с датасетами
-1. Создать датасет
-``` bash
-curl -X POST http://localhost:8000/datasets \
--H "Content-Type: application/json" \
--d '{
-    "dataset_name": "my_dataset.json",
-    "data": [
-        {"X": [1,2], "y": 3},
-        {"X": [4,5], "y": 9}
-    ]
-}'
-```
+![handlers](./readme_photos/status.png)
 
+## Minikube
 
-   make minikube-start
-   make push
-   make k8s-deploy
-   make open-dashboard
-   make clean all
+Поддержано развертывание в миникубе, для запуска нужно выполнить `make -f Makefile.minikube all`
+
+Для проверки успешности можно вызвать `make -f Makefile.minikube open-api` или `make -f Makefile.minikube open-dashboard`

@@ -1,6 +1,7 @@
 import logging
 import sys
 
+
 def get_logger(name: str):
     log = logging.getLogger(name)
     if not log.handlers:

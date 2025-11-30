@@ -47,4 +47,4 @@ spec:
           mountPath: /data
       volumes:
       - name: minio-storage
-        emptyDir: {}  # простая директория, для демо
+        emptyDir: {}

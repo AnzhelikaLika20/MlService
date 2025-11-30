@@ -1,6 +1,6 @@
-from fastapi import FastAPI
+from app.api import datasets, health, models
 from app.logger import get_logger
-from app.api import health, models, datasets
+from fastapi import FastAPI
 
 logger = get_logger("main")
 

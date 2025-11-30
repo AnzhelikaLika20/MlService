@@ -1,17 +1,9 @@
-import pickle
-import io
-import json
-from app.s3 import get_s3_client
-from app.config import settings
+import os
 import subprocess
 from pathlib import Path
-import os
-import json
-from clearml import Task, StorageManager
-from app.ml.registry import get_model
+
 import joblib
-import os
-from clearml import OutputModel, Model
+from clearml import Model, OutputModel
 
 MODEL_LOCAL_PATH = "./models"
 os.makedirs(MODEL_LOCAL_PATH, exist_ok=True)
@@ -20,6 +12,7 @@ CACHE_DIR = "saved_models/cache"
 TASK_ID_FILE = os.path.join(CACHE_DIR, "task_id.json")
 os.makedirs(CACHE_DIR, exist_ok=True)
 DVC_DATASETS_DIR = "data"
+
 # DVC
 
 BASE = Path("/app")
@@ -39,7 +32,7 @@ def dvc_remove(file_path: str):
 def dvc_list(path=".", recursive=False):
     """
     Возвращает список файлов и папок, отслеживаемых DVC.
-    
+
     Args:
         path (str): путь в репозитории DVC
         recursive (bool): если True, будет рекурсивно проходить папки
@@ -49,7 +42,7 @@ def dvc_list(path=".", recursive=False):
         cmd.append("-R")
     result = subprocess.check_output(cmd, cwd=BASE)
     lines = [line.strip() for line in result.decode().splitlines()]
-    
+
     files = [f for f in lines if not f.endswith(".dvc")]
     return files
 
@@ -64,16 +57,13 @@ def dvc_restore_file(filename: str) -> str:
     abs_path = os.path.join(DVC_DATASETS_DIR, safe_fn)
     if not os.path.exists(abs_path):
         subprocess.run(
-            ["dvc", "pull", abs_path],
-            check=True,
-            capture_output=True,
-            text=True
+            ["dvc", "pull", abs_path], check=True, capture_output=True, text=True
         )
     return abs_path
 
 
-
 # МОДЕЛИ
+
 
 def save_model_clearml(model, model_name, clearml_task):
     path = os.path.join(MODEL_LOCAL_PATH, f"{model_name}.pkl")
@@ -93,24 +83,25 @@ def load_model_from_clearml(model_name: str):
     )
     if not model_list:
         raise FileNotFoundError(f"No model artifact found for {model_name} in ClearML")
-    model_entry = sorted(model_list, key=lambda m: getattr(m, 'last_update', ''), reverse=True)[0]
+    model_entry = sorted(
+        model_list, key=lambda m: getattr(m, "last_update", ""), reverse=True
+    )[0]
     fp = model_entry.get_local_copy()
     os.replace(fp, local_path)
 
     return joblib.load(local_path)
 
 
-
-def delete_model(model_name: str):
+def delete_model_from_clearml(model_name: str):
     """Удаляет модель из S3"""
-    key = f"models/{model_name}.pkl"
-
     model_list = Model.query_models(
         model_name=model_name,
         only_published=True,
     )
     if not model_list:
         raise FileNotFoundError(f"No model artifact found for {model_name} in ClearML")
-    model_entry = sorted(model_list, key=lambda m: getattr(m, 'last_update', ''), reverse=True)[0]
+    model_entry = sorted(
+        model_list, key=lambda m: getattr(m, "last_update", ""), reverse=True
+    )[0]
 
     Model.remove(model_entry)

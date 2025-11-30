@@ -1,6 +1,8 @@
 import pickle
-from sklearn.tree import DecisionTreeRegressor
+
 from app.ml.base import BaseModel
+from sklearn.tree import DecisionTreeRegressor
+
 
 class TreeModel(BaseModel):
     name = "tree"

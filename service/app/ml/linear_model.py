@@ -1,6 +1,8 @@
 import pickle
-from sklearn.linear_model import LinearRegression
+
 from app.ml.base import BaseModel
+from sklearn.linear_model import LinearRegression
+
 
 class LinearModel(BaseModel):
     name = "linear"

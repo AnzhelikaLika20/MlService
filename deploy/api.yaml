@@ -69,7 +69,7 @@ kind: Service
 metadata:
   name: ml-service
 spec:
-  type: NodePort # для minikube dev, можно LoadBalancer
+  type: NodePort
   selector:
     app: ml-service
   ports:

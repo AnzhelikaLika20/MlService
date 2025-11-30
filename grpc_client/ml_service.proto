@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package mlservice;
+
+// ----- Датасеты -----
+message DatasetName { string name = 1; }
+message Empty {}
+
+message FileContent {
+    bytes content = 1;
+}
+
+service DatasetService {
+    rpc ListDatasets(Empty) returns (DatasetList);
+    rpc UploadDataset(UploadDatasetRequest) returns (SimpleResponse);
+    rpc DeleteDataset(DatasetName) returns (SimpleResponse);
+    rpc DownloadDataset(DatasetName) returns (FileContent);
+}
+
+message DatasetList {
+    repeated string datasets = 1;
+}
+
+message UploadDatasetRequest {
+    string name = 1;
+    bytes content = 2;
+}
+
+message SimpleResponse {
+    string status = 1;
+    string message = 2;
+}
+
+// ----- Модели -----
+service ModelService {
+    rpc GetSupportedModels(Empty) returns (ModelList);
+    rpc GetTrainedModels(Empty) returns (ModelList);
+    rpc TrainModel(TrainRequest) returns (TrainResponse);
+    rpc Predict(PredictRequest) returns (PredictResponse);
+    rpc DeleteModel(ModelName) returns (SimpleResponse);
+}
+
+message ModelList {
+    repeated string models = 1;
+}
+
+message ModelName { string name = 1; }
+
+message TrainRequest {
+    string model_class = 1;
+    repeated FeatureList X = 2;
+    repeated float y = 3;
+    string params_json = 4; // гиперпараметры в json
+}
+
+message TrainResponse {
+    string status = 1;
+    string model_id = 2;
+    string name = 3;
+}
+
+message FeatureList {
+    repeated float values = 1;
+}
+
+message PredictRequest {
+    string model_name = 1;
+    repeated FeatureList X = 2;
+}
+
+message PredictResponse {
+    repeated float predictions = 1;
+}

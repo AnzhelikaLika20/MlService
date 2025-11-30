@@ -6,8 +6,10 @@ MODEL_REGISTRY = {
     TreeModel.name: TreeModel,
 }
 
+
 def list_models():
     return list(MODEL_REGISTRY.keys())
+
 
 def get_model(name: str):
     if name not in MODEL_REGISTRY:

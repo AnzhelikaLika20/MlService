@@ -1,6 +1,7 @@
 import boto3
-from botocore.exceptions import ClientError
 from app.config import settings
+from botocore.exceptions import ClientError
+
 
 def create_bucket(bucket_name: str):
     s3 = boto3.client(
@@ -20,6 +21,7 @@ def create_bucket(bucket_name: str):
         print(f"Bucket '{bucket_name}' успешно создан")
     except ClientError as e:
         print(f"Ошибка при создании бакета: {e}")
+
 
 if __name__ == "__main__":
     create_bucket(settings.S3_BUCKET)
