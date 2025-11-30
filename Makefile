@@ -10,4 +10,7 @@ clean:
 create-bucket:
 	docker exec -it ml_service bash -c "PYTHONPATH=/app python -m app.scripts.create_bucket"
 
-rebuild: clean build up create-bucket
+dvc-init:
+	docker exec -it ml_service bash -c "PYTHONPATH=/app python -m app.scripts.init_dvc"
+
+rebuild: clean build up create-bucket dvc-init

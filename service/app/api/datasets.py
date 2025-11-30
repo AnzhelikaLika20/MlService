@@ -1,31 +1,36 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, UploadFile
 from app.services.dataset_manager import DatasetManager
 from app.logger import get_logger
+import os
+from app.storage import dvc_add, dvc_remove, dvc_list
 
 router = APIRouter()
 logger = get_logger("datasets")
 
-@router.get("/datasets")
+
+@router.get("/")
 def list_datasets():
-    from app.storage import list_datasets
-    datasets = list_datasets()
-    return {"datasets": datasets}
+    logger.info("Datasets listing requested")
+    return dvc_list(path="data", recursive=True)
 
 
-@router.post("/datasets")
-def upload_dataset(dataset: dict):
-    from app.storage import save_dataset
-    save_dataset(dataset)
-    logger.info("Dataset uploaded.")
-    return {"status": "uploaded"}
+@router.post("/")
+def upload_dataset(file: UploadFile):
+    logger.info("Datasets saving requested")
+    path = f"/app/data/{file.filename}"
+
+    os.makedirs("/app/data", exist_ok=True)
+
+    with open(path, "wb") as f:
+        f.write(file.file.read())
+
+    dvc_add(path)
+    return {"status": "ok", "file": file.filename}
 
 
-@router.delete("/datasets/{dataset_name}")
-def delete_dataset(dataset_name: str):
-    from app.storage import remove_dataset
-    try:
-        remove_dataset(dataset_name)
-        logger.info(f"Dataset {dataset_name} deleted.")
-        return {"status": "deleted", "dataset": dataset_name}
-    except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="Dataset not found")
+@router.delete("/{name}")
+def delete_dataset(name: str):
+    logger.info("Datasets delition requested")
+    path = f"/app/data/{name}"
+    dvc_remove(path)
+    return {"status": "deleted"}
