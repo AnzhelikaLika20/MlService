@@ -1,6 +1,7 @@
 # Задание для агента: Реализация дистилляции моделей
 
 ## Описание задачи
+
 Необходимо добавить в существующий ML сервис функциональность дистилляции моделей. Дистилляция позволяет сжимать большие модели в маленькие с минимальной потерей качества.
 
 ### Этап 1: Создание структуры для дистилляции
@@ -79,10 +80,13 @@ dashboard/dashboard.py # Добавить вкладку дистилляции
 ### Этап 5: Документация
 
 Обновить:
+	service/app/api/distillation.py # API эндпоинты
+	service/app/ml/distillation.py # Логика дистилляции
+	dashboard/dashboard.py # Добавить вкладку дистилляции
 
-1. **API.md** - добавить секцию "Distillation API" с примерами запросов
-2. **CHANGELOG.md** - добавить запись о новой фиче
-3. **README.md** - упомянуть возможность дистилляции
+
+
+
 
 ## Критерии качества
 
@@ -102,16 +106,3 @@ dashboard/dashboard.py # Добавить вкладку дистилляции
 ## Примеры использования
 
 ### Пример 1: Запуск через API
-```bash
-curl -X POST http://localhost:8000/models/distill/start \
-  -H "Content-Type: application/json" \
-  -d '{
-    "teacher_model_id": "clearml-model-123",
-    "student_model_type": "tree",
-    "dataset_name": "data.csv",
-    "config": {
-      "temperature": 3.0,
-      "alpha": 0.7,
-      "epochs": 100
-    }
-  }'
