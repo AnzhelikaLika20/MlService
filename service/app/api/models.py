@@ -1,6 +1,8 @@
 import os
+import time
 
 from app.logger import get_logger
+from app.metrics import record_inference_duration
 from app.ml.registry import get_model, list_models
 from app.storage import (
     delete_model_from_clearml,
@@ -76,7 +78,9 @@ def predict(model_name: str, payload: dict):
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Model not found: {e}")
 
+    start = time.perf_counter()
     preds = model.predict(payload["X"])
+    record_inference_duration(model_name, time.perf_counter() - start)
     return {"predictions": preds}
 
 

@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: victoriametrics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: victoriametrics
+  template:
+    metadata:
+      labels:
+        app: victoriametrics
+    spec:
+      containers:
+        - name: victoriametrics
+          image: victoriametrics/victoria-metrics:latest
+          args:
+            - -promscrape.config=/etc/vm/scrape.yml
+            - -httpListenAddr=:8428
+            - -retentionPeriod=1
+          ports:
+            - containerPort: 8428
+          volumeMounts:
+            - name: scrape-config
+              mountPath: /etc/vm
+              readOnly: true
+      volumes:
+        - name: scrape-config
+          configMap:
+            name: victoriametrics-scrape-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: victoriametrics
+spec:
+  selector:
+    app: victoriametrics
+  ports:
+    - port: 8428
+      targetPort: 8428
+      name: http
