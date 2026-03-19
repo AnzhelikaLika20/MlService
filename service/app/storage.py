@@ -3,7 +3,6 @@ import subprocess
 from pathlib import Path
 
 import joblib
-from clearml import Model, OutputModel
 
 MODEL_LOCAL_PATH = "./models"
 os.makedirs(MODEL_LOCAL_PATH, exist_ok=True)
@@ -66,6 +65,8 @@ def dvc_restore_file(filename: str) -> str:
 
 
 def save_model_clearml(model, model_name, clearml_task):
+    from clearml import OutputModel
+
     path = os.path.join(MODEL_LOCAL_PATH, f"{model_name}.pkl")
     joblib.dump(model, path)
     output_model = OutputModel(task=clearml_task, name=model_name)
@@ -75,6 +76,8 @@ def save_model_clearml(model, model_name, clearml_task):
 
 
 def load_model_from_clearml(model_name: str):
+    from clearml import Model
+
     local_path = os.path.join(MODEL_LOCAL_PATH, f"{model_name}.pkl")
 
     model_list = Model.query_models(
@@ -94,6 +97,8 @@ def load_model_from_clearml(model_name: str):
 
 def delete_model_from_clearml(model_name: str):
     """Удаляет модель из S3"""
+    from clearml import Model
+
     model_list = Model.query_models(
         model_name=model_name,
         only_published=True,
