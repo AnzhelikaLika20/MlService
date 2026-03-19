@@ -21,6 +21,18 @@ spec:
             - -retentionPeriod=1
           ports:
             - containerPort: 8428
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8428
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8428
+            initialDelaySeconds: 15
+            periodSeconds: 20
           volumeMounts:
             - name: scrape-config
               mountPath: /etc/vm

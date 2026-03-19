@@ -35,6 +35,10 @@ Swagger доступен по `http://0.0.0.0:8000/docs`
 
 ![handlers](./readme_photos/status.png)
 
+## Нагрузочное тестирование
+
+Сценарии на **Locust** и текстовое описание см. **[loadtest/](loadtest/)**, [loadtest/README.md](loadtest/README.md).
+
 ## Minikube
 
 Поддержано развертывание в миникубе, для запуска нужно выполнить `make -f Makefile.minikube all`

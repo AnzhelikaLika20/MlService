@@ -15,14 +15,12 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
-# Request count by method, path template, status class (2xx, 4xx, 5xx)
 HTTP_REQUESTS_TOTAL = Counter(
     "http_requests_total",
     "Total HTTP requests",
     ["method", "path", "status_class"],
 )
 
-# Request duration in seconds by path template
 HTTP_REQUEST_DURATION_SECONDS = Histogram(
     "http_request_duration_seconds",
     "HTTP request latency in seconds",
@@ -30,7 +28,6 @@ HTTP_REQUEST_DURATION_SECONDS = Histogram(
     buckets=(0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0),
 )
 
-# Model inference duration in seconds by model name
 ML_INFERENCE_DURATION_SECONDS = Histogram(
     "ml_inference_duration_seconds",
     "Model inference latency in seconds",

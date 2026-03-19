@@ -9,7 +9,6 @@ from app.storage import (
     load_model_from_clearml,
     save_model_clearml,
 )
-from clearml import Model, Task
 from fastapi import APIRouter, HTTPException
 
 router = APIRouter()
@@ -30,6 +29,8 @@ def get_all_models():
     Возвращает список всех обученных моделей в ClearML,
     включая имя, id, проект и дату обновления.
     """
+    from clearml import Model
+
     models = Model.query_models(only_published=True)
     result = []
     for m in sorted(models, key=lambda m: getattr(m, "last_update", ""), reverse=True):
@@ -53,6 +54,8 @@ def train_model(model_name: str, payload: dict):
         raise HTTPException(status_code=400, detail="Need X and y")
     X, y = payload["X"], payload["y"]
     params = payload.get("params", {})
+
+    from clearml import Task
 
     task = Task.init(
         project_name="ML_Service",
