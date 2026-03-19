@@ -1,6 +1,0 @@
-# Добавить работу с артефактами дистилляции
-class Storage:
-    # ...
-
-    def save_distillation_artifact(self, artifact):
-        # ...
